@@ -20,6 +20,7 @@
 <div id=content>
   Input a gif
   <view name="upload"></view>
+  <canvas width=1000 height=1000 id="mainframe"></canvas>
 </div>
 </div>
 </script>
@@ -85,22 +86,42 @@
           console.log("file loaded")
           var fileData = reader.result
           var data = new DataView(fileData);
-          var buf = []
-          for(var i = 0; i < data.byteLength; i++) {
-            buf.push(data.getInt8(i));
-          }
-          console.log("buf", buf.length, data.byteLength)
+         
+          var canvas = document.getElementById("mainframe")
+          var header;
+          var transparency;
 
+          var frame = canvas.getContext('2d');
           var handler = {
-            hdr: function() { console.log("hdr")},
-            gce: function() { console.log("gce")},
-            com: function() { console.log("com")},
-            // I guess that's all for now.
+            hdr: function(hdr) { header = hdr; console.log("hdr", hdr)},
+            gce: function(gce) { 
+              console.log("gce", gce)
+              // seems weird to do this mix of async and sync
+              transparency = gce.transparencyGiven ? gce.transparencyIndex : null;
+              console.log("transparency", transparency)
+            },
+            com: function(com) { console.log("com", com)},
             app: {
-              // TODO: Is there much point in actually supporting iterations?
               NETSCAPE: function() {},
             },
-            img: function(img) { console.log("img", img)},
+            img: function(img) { 
+              console.log("img", img)
+              var ct = img.lctFlag ? img.lct : header.gct;
+              var imgData = frame.getImageData(img.leftPos, img.topPos, img.width, img.height);
+              //apply color table colors
+              var cdd = imgData.data;
+              img.pixels.forEach(function (pixel, i) {
+                // imgData.data === [R,G,B,A,R,G,B,A,...]
+                if (pixel !== transparency) {
+                  cdd[i * 4 + 0] = ct[pixel][0];
+                  cdd[i * 4 + 1] = ct[pixel][1];
+                  cdd[i * 4 + 2] = ct[pixel][2];
+                  cdd[i * 4 + 3] = 255; // Opaque.
+                }
+              }); 
+              imgData.data = cdd;
+              frame.putImageData(imgData, img.leftPos, img.topPos)
+            },
             eof: function (block) {
               console.log("end of file")
               console.log("this", this)
@@ -109,7 +130,7 @@
           var stream = new Stream2(data);
           parseGIF(stream, handler);
           console.log("handler", handler)
-          
+
           /*
           //when we load a file
           try {
