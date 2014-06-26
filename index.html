@@ -1,0 +1,146 @@
+<html>
+  <head>
+    <title>gifclick</title>
+    <script src="lib/d3.min.js"></script>
+    <script src="lib/crossfilter.v1.min.js"></script>
+    <script src="lib/gif.js"></script>
+    <script src="lib/omggif.js"></script>
+    <script src="lib/jdataview.js"></script>
+    <script src="lib/gify.js"></script>
+    <script src="lib/libgif.js"></script>
+    <script src="frames.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css"></link>
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:400,600' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+
+<script type="text/template" id="body">
+<div id=container>
+<div id=content>
+  Input a gif
+  <view name="upload"></view>
+</div>
+</div>
+</script>
+<script type="text/template" id="upload">
+  <input as="fileinput" on-change="inputChange($event)" type="file">
+</script>
+<script type="text/template" id="loader">
+  <!-- taken from: http://codepen.io/jxnblk/pen/Byvzr -->
+  <svg class="icon-loading" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <path opacity=".25" d="M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"/>
+    <path d="M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z">
+      <animateTransform attributeName="transform"          type="rotate" from="0 16 16" to="360 16 16" dur=".8s" repeatCount="indefinite" />
+    </path>
+  </svg>
+</script>
+
+    <script src="lib/derby-standalone.min.js"></script>
+    <script>
+      if(navigator.appName.indexOf("Internet Explorer")!=-1){
+        // warn the user
+        document.getElementById("iewarning").setAttribute("style", "");
+      }
+      ////////////////////// <BOILER PLATE> ///////////////////////////////
+      // setup standalone derby
+      var app = derby.createApp();
+      // setup our templates
+      var templates = document.querySelectorAll('script[type="text/template"]');
+      for (var i = 0; i < templates.length; i++) {
+        var template = templates[i];
+        app.views.register(template.id, template.innerHTML, template.dataset);
+        template.parentNode.removeChild(template);
+      }
+      ////////////////////// </BOILER PLATE> ///////////////////////////////
+      // setup our histogram component (defined in histogram.js)
+      //app.component("histo", Histogram);
+      //app.component("definition", Definition);
+      // create the page and expose the model for use in the console
+      var page = app.createPage();
+      var model = window.MODEL = page.model;
+      // render the main template
+      document.body.appendChild(page.getFragment('body'));
+
+
+      ///////////////////// CONTROLLER CODE ////////////////////////////////
+      model.set("_page.pinyin", "");
+      model.set("_page.loadingSingles", true)
+
+      // when the user clicks on the input this gets called
+      app.proto.clicker = function() {
+        location.href='#pinyin'
+        document.querySelector("input.pinyin").focus();
+      };
+      app.proto.filter = function() {};
+      app.proto.split = function(word) {
+        return word.split("");
+      }
+      app.proto.inputChange = function(e) {
+        console.log("e", e)
+        var el = e.target;
+
+        var reader = new FileReader();
+        reader.onload = function(event) {
+          console.log("file loaded")
+          var fileData = reader.result
+          var data = new DataView(fileData);
+          var buf = []
+          for(var i = 0; i < data.byteLength; i++) {
+            buf.push(data.getInt8(i));
+          }
+          console.log("buf", buf.length, data.byteLength)
+
+          var handler = {
+            hdr: function() { console.log("hdr")},
+            gce: function() { console.log("gce")},
+            com: function() { console.log("com")},
+            // I guess that's all for now.
+            app: {
+              // TODO: Is there much point in actually supporting iterations?
+              NETSCAPE: function() {},
+            },
+            img: function(img) { console.log("img", img)},
+            eof: function (block) {
+              console.log("end of file")
+              console.log("this", this)
+            }
+          };
+          var stream = new Stream2(data);
+          parseGIF(stream, handler);
+          console.log("handler", handler)
+          
+          /*
+          //when we load a file
+          try {
+            var gif = new GifReader(buf);
+            console.log("gif", gif)
+            console.log("width, height", gif.width, gif.height)
+            console.log("frames", gif.numFrames())
+            console.log("frame info", gif.frameInfo(0))
+          } catch(e){ console.log("err", e)} 
+
+          console.log("reader result")
+          var gifInfo = gify.getInfo(reader.result); 
+          console.log("gif info", gifInfo)
+          */
+          /*
+          var blob = new Blob([event.target.result]);
+          window.URL = window.URL || window.webkitURL;
+          var blobURL = window.URL.createObjectURL(blob);
+          var img = new Image();
+          img.src = blobURL;
+          img.onload = function() {
+            console.log("image loaded")
+          }
+          */
+        }
+        reader.readAsArrayBuffer(el.files[0])
+        //reader.readAsText(el.files[0])
+      }
+
+
+
+    </script>
+  </body>
+</html>
