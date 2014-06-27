@@ -4,10 +4,7 @@
     <script src="lib/d3.min.js"></script>
     <script src="lib/crossfilter.v1.min.js"></script>
     <script src="lib/gif.js"></script>
-    <script src="lib/omggif.js"></script>
-    <script src="lib/jdataview.js"></script>
-    <script src="lib/gify.js"></script>
-    <script src="lib/libgif.js"></script>
+    <script src="lib/gifreader.js"></script>
     <script src="frames.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css"></link>
     <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700' rel='stylesheet' type='text/css'>
@@ -124,15 +121,14 @@
 
         var reader = new FileReader();
         reader.onload = function(event) {
-          console.log("file loaded")
           var fileData = reader.result
-          var data = new DataView(fileData);
          
           var canvas = document.getElementById("mainframe")
           var header;
           var transparency;
 
           var frame = canvas.getContext('2d');
+          //an async interface, we pass in several callbacks which get called as the images get parsed out of the gif
           var handler = {
             hdr: function(hdr) { 
               header = hdr; 
@@ -141,15 +137,11 @@
             },
             gce: function(gce) { 
               //console.log("gce", gce)
-              // seems weird to do this mix of async and sync
               transparency = gce.transparencyGiven ? gce.transparencyIndex : null;
               //console.log("transparency", transparency)
               model.push("_page.gces", gce)
             },
             com: function(com) { console.log("com", com)},
-            app: {
-              NETSCAPE: function() {},
-            },
             img: function(img) { 
               //console.log("img", img)
               model.push("_page.images", img)
@@ -159,18 +151,12 @@
             },
             eof: function (block) {
               console.log("end of file")
-              //console.log("this", this)
             }
           };
-          var stream = new Stream2(data);
-          parseGIF(stream, handler);
+          parseGIF(reader.result, handler);
         }
         reader.readAsArrayBuffer(el.files[0])
-        //reader.readAsText(el.files[0])
       }
-
-
-
     </script>
   </body>
 </html>

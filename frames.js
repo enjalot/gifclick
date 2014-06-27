@@ -3,7 +3,6 @@ function Frames() {}
 // All components have an init function that runs before anything happens
 Frames.prototype.init = function() {
   var model = this.model;
-
 };
 
 // create runs after the component (and the DOM) have been loaded.
@@ -28,7 +27,6 @@ Frames.prototype.transform = function() {
   var model = this.model;
   var that = this;
   var color = model.get("color")
-  console.log("COLOR", color)
 
   var images = model.get("array");
   var palette = model.get("palette")
