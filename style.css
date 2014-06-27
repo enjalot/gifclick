@@ -13,28 +13,35 @@ a {
   color: #8bb0be;
 }
 
-input.pinyin {
-  width: 120px;
-  font-size: 30px;
-  font-family: 'Source Sans Pro', "Helvetica Neue", Helvetica, sans-serif;
-  font-weight: 400;
-  outline: none;
-  box-shadow: none;
-  border: 1px solid #ebebeb;
-  border-radius: 6px;
-  padding: 5px;
-  margin-bottom: 10px;
-  color: black;
-
-  background: #e4e4e4;
-	background: -webkit-linear-gradient(#e4e4e4, #e5e5e5);
-	background: -moz-linear-gradient(#e4e4e4, #e5e5e5);
-	background: -o-linear-gradient(#e4e4e4, #e5e5e5);
-	background: -ms-linear-gradient(#e4e4e4, #e5e5e5);
-	background: linear-gradient(#e4e4e4, #e5e5e5);
-	box-shadow: 0 0 5px rgba(255,0,0,.2), inset 0 0 5px rgba(255,0,0,.1), 0 2px 0 #000;
-	outline: none;
+.pallet {
+  width: 200px;
+  height: 200px;
+  float:left;
 }
+.color {
+  width: 200px;
+  height: 200px;
+  float:left;
+}
+
+.gct {
+  width:10px;
+  height:10px;
+  float:left;
+}
+div.image {
+  float:left;
+}
+.mainframe {
+  clear:left;
+  float:left;
+}
+.frames {
+  clear:left;
+}
+
+
+
 .tryme {
   /* taken from http://codepen.io/jackrugile/pen/ABeIi?editors=111 */
 	-webkit-animation: glow 800ms ease-out infinite alternate;
@@ -65,196 +72,12 @@ h2 {
 }
 
 #content {
-  max-width: 960px;
+  max-width: 1024px;
   margin: 0 auto;
 }
 
-#text {
-  font-size: 16px;
-}
-#text .number {
-  color: "#646464";
-  font-weight: 400;
-}
-#text .value {
-  font-weight: 700;
-}
-#histos {
-}
-#conclusion {
-  margin-top: 30px;
-}
-
-.bar-container {
-  width: 25px;
-  margin: 0px 3px;
-  display: inline-block;
-  padding-bottom: 10px;
-  cursor: pointer;
-}
-.letter {
-  font-family: 'Source Code Pro', "Helvetica Neue", Helvetica, sans-serif;
-  color: #818181;
-  height: 10px;
-  text-align: center;
-  text-transform: uppercase;
-  margin-top: 2px;
-  font-size: 12px;
-}
-.value {
-  font-family: 'Source Code Pro', "Helvetica Neue", Helvetica, sans-serif;
-  color: #fff;
-  height: 10px;
-  text-align: center;
-  text-transform: uppercase;
-  position: relative;
-  float:left;
-  width: 25px;
-  font-size: 8px;
-}
 
 input {
-}
-.histos {
-}
-.count {
-}
-.examples {
-  display: inline-block;
-  padding-left: 10px;
-}
-.example {
-  padding: 4px;
-  font-weight: 600;
-}
-.start {
-  color: #be8b8b;
-  font-weight: 600;
-}
-.end {
-  color: #8bbea6;
-  font-weight: 600;
-}
-.tone {
-  color: rgb(120,160,177);
-  font-weight: 600;
-}
-
-.bar {
-  border-radius: 2px 2px 0px 0px;
-}
-
-.inner {
-  width: 100%;
-  position:relative;
-  display: inline-block;
-}
-.outside {
-  color:#818181;
-}
-.hidden {
-  visibility: hidden;
-}
-.denominator {
-  border-top: 1px solid #ebebeb;
-  top: 2px;
-  position: relative;
-}
-.outside .denominator {
-  border-top: 1px solid #a5a5a5;
-}
-.initials .bar {
-  background-color: #e5d1d1;
-}
-.initials .inner {
-  background-color: #be8b8b;
-}
-.initials .highlight {
-  border: 1px solid #be8b8b;
-  border-radius: 2px 2px 0px 0px;
-}
-
-.finals .bar {
-  background-color: #cee3d9;
-}
-.finals .inner {
-  background-color: #8bbea6;
-}
-.finals .highlight {
-  border: 1px solid #8bbea6;
-  border-radius: 2px 2px 0px 0px;
-}
-.tones .bar {
-  background-color: rgb(199,216,223);
-}
-.tones .inner {
-  background-color: rgb(120,160,177);
-}
-.tones .highlight {
-  border: 1px solid rgb(120,160,177);
-  border-radius: 2px 2px 0px 0px;
-}
-
-
-#chars {
-  min-height: 300px;
-  margin-top: 30px;
-}
-.char {
-  padding: 0px 4px;
-  font-size: 30px;
-  height: 50px;
-  width: 50px;
-  display: inline-block;
-  font-weight: 400;
-  cursor: pointer;
-  font-family: 'Yuanti SC', 'Yuanti TC', sans-serif;
-  /*font-family: 'Xingkai SC', 'Xingkai TC';*/
-  /*font-family: 'Wawati SC', 'Wawati TC';*/
-}
-
-.char:hover {
-  font-weight: 600;
-  font-size: 35px;
-  margin-top: -7px;
-  -moz-transition:font-size 0.2s; /* Firefox 4 */
-  -webkit-transition:font-size 0.2s; /* Safari and Chrome */
-  -o-transition:font-size 0.2s;
-  transition: font-size 0.2s;
-}
-
-.selected-char {
-  transform: scale(1.2);
-  /*font-size: 35px;*/
-  font-weight: 700;
-  color: #444;
-}
-
-.definition {
-  padding: 5px;
-  font-size: 16px;
-}
-.pin {
-  font-size: 22px;
-}
-.def-char {
-  font-size: 25px;
-}
-.sel-def-char {
-  font-size: 25px;
-  color: #444;
-}
-.def-char:hover {
-}
-#iewarning {
-  background: yellow;
-  font-size: 20px;
-  padding: 10px;
-}
-
-.icon-loading {
-  width: 2em;
-  height: 2em;
 }
 
 

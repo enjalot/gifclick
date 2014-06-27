@@ -20,13 +20,43 @@
 <div id=content>
   Input a gif
   <view name="upload"></view>
-  <canvas width=1000 height=1000 id="mainframe"></canvas>
+
+  <div class="colors">
+    <view name="palette" array="{{_page.header.gct}}"></view>
+    <div class="color" style="background-color:rgb({{_page.hcolor[0]}}, {{_page.hcolor[1]}}, {{_page.hcolor[2]}})"></div>
+  </div>
+    
+  <div class="mainframe">
+    <canvas style="width:{{_page.header.width/4}}px;height:{{_page.header.height/4}}px;" id="mainframe"></canvas>
+  </div>
+
+  <div class="frames">
+    <view name="frames" array="{{_page.images}}" palette="{{_page.header.gct}}" color="{{_page.color}}"></view>
+  </div>
+
 </div>
 </div>
 </script>
-<script type="text/template" id="upload">
+<script type="text/template" id="upload" element="upload">
   <input as="fileinput" on-change="inputChange($event)" type="file">
 </script>
+
+<script type="text/template" id="frames" element="frames" attributes="array palette">
+  {{each array as #img,#i}}
+    <div class="image">
+      <canvas style="width:{{#img.width/5}}px;height:{{#img.height/5}}px" class="image{{#i}}"></canvas>
+    </div>
+  {{/each}}
+</script>
+
+<script type="text/template" id="palette" element="palette" attributes="array selected">
+  <div class="pallet">
+    {{each @array as #gct}}
+      <div on-click="selectColor(#gct)" on-mouseover="hoverColor(#gct)" class="gct" style="background-color:rgb({{#gct[0]}}, {{#gct[1]}}, {{#gct[2]}})"></div>
+    {{/each}}
+  </div>
+</script>
+
 <script type="text/template" id="loader">
   <!-- taken from: http://codepen.io/jxnblk/pen/Byvzr -->
   <svg class="icon-loading" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -55,7 +85,7 @@
       }
       ////////////////////// </BOILER PLATE> ///////////////////////////////
       // setup our histogram component (defined in histogram.js)
-      //app.component("histo", Histogram);
+      app.component("frames", Frames);
       //app.component("definition", Definition);
       // create the page and expose the model for use in the console
       var page = app.createPage();
@@ -77,6 +107,17 @@
       app.proto.split = function(word) {
         return word.split("");
       }
+      app.proto.hoverColor = function(color) {
+        model.set("_page.hcolor", color)
+      }
+      app.proto.selectColor = function(color) {
+        var current = model.get("_page.color")
+        if(current === color) {
+          model.del("_page.color")
+        } else {
+          model.set("_page.color", color)
+        }
+      }
       app.proto.inputChange = function(e) {
         console.log("e", e)
         var el = e.target;
@@ -93,68 +134,36 @@
 
           var frame = canvas.getContext('2d');
           var handler = {
-            hdr: function(hdr) { header = hdr; console.log("hdr", hdr)},
+            hdr: function(hdr) { 
+              header = hdr; 
+              //console.log("hdr", hdr)
+              model.set("_page.header", hdr)
+            },
             gce: function(gce) { 
-              console.log("gce", gce)
+              //console.log("gce", gce)
               // seems weird to do this mix of async and sync
               transparency = gce.transparencyGiven ? gce.transparencyIndex : null;
-              console.log("transparency", transparency)
+              //console.log("transparency", transparency)
+              model.push("_page.gces", gce)
             },
             com: function(com) { console.log("com", com)},
             app: {
               NETSCAPE: function() {},
             },
             img: function(img) { 
-              console.log("img", img)
-              var ct = img.lctFlag ? img.lct : header.gct;
-              var imgData = frame.getImageData(img.leftPos, img.topPos, img.width, img.height);
-              //apply color table colors
-              var cdd = imgData.data;
-              img.pixels.forEach(function (pixel, i) {
-                // imgData.data === [R,G,B,A,R,G,B,A,...]
-                if (pixel !== transparency) {
-                  cdd[i * 4 + 0] = ct[pixel][0];
-                  cdd[i * 4 + 1] = ct[pixel][1];
-                  cdd[i * 4 + 2] = ct[pixel][2];
-                  cdd[i * 4 + 3] = 255; // Opaque.
-                }
-              }); 
-              imgData.data = cdd;
-              frame.putImageData(imgData, img.leftPos, img.topPos)
+              //console.log("img", img)
+              model.push("_page.images", img)
+              canvas.width = img.width;
+              canvas.height = img.height;
+              draw(img, frame, header.gct, transparency);
             },
             eof: function (block) {
               console.log("end of file")
-              console.log("this", this)
+              //console.log("this", this)
             }
           };
           var stream = new Stream2(data);
           parseGIF(stream, handler);
-          console.log("handler", handler)
-
-          /*
-          //when we load a file
-          try {
-            var gif = new GifReader(buf);
-            console.log("gif", gif)
-            console.log("width, height", gif.width, gif.height)
-            console.log("frames", gif.numFrames())
-            console.log("frame info", gif.frameInfo(0))
-          } catch(e){ console.log("err", e)} 
-
-          console.log("reader result")
-          var gifInfo = gify.getInfo(reader.result); 
-          console.log("gif info", gifInfo)
-          */
-          /*
-          var blob = new Blob([event.target.result]);
-          window.URL = window.URL || window.webkitURL;
-          var blobURL = window.URL.createObjectURL(blob);
-          var img = new Image();
-          img.src = blobURL;
-          img.onload = function() {
-            console.log("image loaded")
-          }
-          */
         }
         reader.readAsArrayBuffer(el.files[0])
         //reader.readAsText(el.files[0])
