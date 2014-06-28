@@ -1,62 +1,71 @@
 // Define our histogram component's controller code
-function Frames() {}
+function Frame() {}
 // All components have an init function that runs before anything happens
-Frames.prototype.init = function() {
+Frame.prototype.init = function() {
   var model = this.model;
+  this.image = model.at("image")
+  this.palette = model.at("palette")
+  this.doHisto = model.at("doHisto")
 };
 
 // create runs after the component (and the DOM) have been loaded.
-Frames.prototype.create = function() {
+Frame.prototype.create = function() {
   var that = this;
   var model = this.model;
   //set the data on all the canvas'
-  var frames = model.get("array")
 
-  // changes in values inside the array
-  model.on("all", "array**", function() {
-    that.transform()
-  })
   model.on("all", "color**", function() {
-    that.transform()
+    that.transform();
   })
+  //render the initial frame
+  this.transform();
 };
 
 // This is where we transform the data into a format that's easier to render.
 // this is following the d3 pattern of layouts (and copying d3.chart's naming convention)
-Frames.prototype.transform = function() {
+Frame.prototype.transform = function() {
   var model = this.model;
   var that = this;
   var color = model.get("color")
 
-  var images = model.get("array");
-  var palette = model.get("palette")
-  var image, i, canvas, ctx, imgData;
-  for(i = 0; i < images.length; i++) {
-    image = images[i];
-    //console.log("image", image)
-    canvas = document.querySelector("canvas.image" + i);
-    ctx = canvas.getContext("2d");
-    //resize the canvas
-    canvas.width = image.width;
-    canvas.height = image.height;
-    //draw to it
-    draw(image, ctx, palette, null, color)
-  }
-
+  var image = this.getAttribute("image")
+  var palette = this.getAttribute("palette")
+  //console.log("image", image)
+  var canvas = this.canvas;
+  var ctx = canvas.getContext("2d");
+  //resize the canvas
+  canvas.width = image.width;
+  canvas.height = image.height;
+  var doHisto = this.getAttribute("doHisto")
+  //draw to it
+  var histo = draw(image, ctx, palette, {color: color, doHisto: doHisto})
+  if(histo)
+    model.set("image.histo", histo)
 };
 
-Frames.prototype.hovered = function(d) {
+Frame.prototype.hovered = function(d) {
   this.emit("data", d);
 }
 
-function draw(img, ctx, gct, transparency, color) {
+function draw(img, ctx, gct, options) {
+  var transparency = options.transparency;
+  var color = options.color;
+  var doHisto = options.doHisto;
+
   var ct = img.lctFlag ? img.lct : gct;
   var imgData = ctx.getImageData(img.leftPos, img.topPos, img.width, img.height);
   //apply color table colors
   var cdd = imgData.data;
+  var histo = {};
   img.pixels.forEach(function (pixel, i) {
     // imgData.data === [R,G,B,A,R,G,B,A,...]
     px = ct[pixel];
+    var count = histo[px.join(",")];
+    if(count) {
+      histo[px.join(",")]++
+    } else {
+      histo[px.join(",")] = 1
+    }
     if(color && !compare(px, color)) {
       px = desaturate(px, 5,1,4)
     }
@@ -68,7 +77,8 @@ function draw(img, ctx, gct, transparency, color) {
     }
   }); 
   imgData.data = cdd;
-  ctx.putImageData(imgData, img.leftPos, img.topPos)
+  ctx.putImageData(imgData, img.leftPos, img.topPos);
+  return histo;
 }
 
 function desaturate(px, rweight, gweight, bweight) {
@@ -82,7 +92,7 @@ function desaturate(px, rweight, gweight, bweight) {
   var r = px[0];
   var g = px[1];
   var b = px[2];
-  var brightness = r * rweight + g * gweight + b * bweight;
+  var brightness = r * rweight + g * gweight + b * bweight + 50;
   //replace the r, g, and b values of the pixel with "brightness"
   return [brightness, brightness, brightness];
 }

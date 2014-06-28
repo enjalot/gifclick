@@ -29,8 +29,12 @@ a {
   height:10px;
   float:left;
 }
+.histo {
+  float:left;
+}
 div.image {
   float:left;
+  margin: 20px;
 }
 .mainframe {
   clear:left;
@@ -39,7 +43,13 @@ div.image {
 .frames {
   clear:left;
 }
-
+.histosquare {
+  float: left;
+}
+.histosquares {
+  width: 200px;
+  float: left;
+}
 
 .tryme {
   /* taken from http://codepen.io/jackrugile/pen/ABeIi?editors=111 */

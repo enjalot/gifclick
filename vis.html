@@ -5,7 +5,9 @@
     <script src="lib/crossfilter.v1.min.js"></script>
     <script src="lib/gif.js"></script>
     <script src="lib/gifreader.js"></script>
+    <script src="palette.js"></script>
     <script src="frame.js"></script>
+    <script src="histosquare.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css"></link>
     <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:400,600' rel='stylesheet' type='text/css'>
@@ -16,21 +18,26 @@
 <div id=container>
 <div id=content>
   Input a gif
-  <view name="upload"></view>
+  <upload></upload>
 
+  <div class="original">
+  <img as="original">
+  </div>
   <div class="colors">
-    <view name="palette" array="{{_page.header.gct}}"></view>
+    <palette on-hover="hoverColor()" on-select="selectColor()" array="{{_page.header.gct}}"></palette>
     <div class="color" style="background-color:rgb({{_page.hcolor[0]}}, {{_page.hcolor[1]}}, {{_page.hcolor[2]}})"></div>
   </div>
     
-  <div class="mainframe">
-    <canvas style="width:{{_page.header.width/4}}px;height:{{_page.header.height/4}}px;" id="mainframe"></canvas>
-  </div>
-
   <div class="frames">
   {{each _page.images as #image}}
-    <frame image="{{#image}}" palette="{{_page.header.gct}}" color="{{_page.color}}"></frame>
+    <frame image="{{#image}}" palette="{{_page.header.gct}}" color="{{_page.color}}" doHisto="{{true}}"></frame>
   {{/each}}
+  <!--
+  {{if _page.images[0]}}
+    <frame image="{{_page.images[0]}}" palette="{{_page.header.gct}}" color="{{_page.color}}" doHisto="{{true}}"></frame>
+  {{/if}}
+  -->
+  
   </div>
 
 </div>
@@ -42,14 +49,25 @@
 
 <script type="text/template" id="frame" data-element="frame" attributes="image palette">
   <div class="image">
-    <canvas as="canvas" style="width:{{#image.width/5}}px;height:{{#image.height/5}}px" class="image"></canvas>
+    <canvas as="canvas" style="width:{{@image.width/5}}px;height:{{@image.height/5}}px" class="image"></canvas>
+    <histosquares histo="{{@image.histo}}"></histosquares>
+  </div>
+</script>
+
+<script type="text/template" id="histosquares" data-element="histosquares" attributes="histo">
+  <div class="histosquares">
+  {{console.log("array", array)}}
+    {{each array as #color}}
+      <div class="histosquare" style="width:{{#color.scaled}}px;height:{{#color.scaled}}px;background-color:rgb({{#color.r}}, {{#color.g}}, {{#color.b}})">
+      </div>
+    {{/each}}
   </div>
 </script>
 
 <script type="text/template" id="palette" data-element="palette" attributes="array selected">
   <div class="pallet">
-    {{each @array as #gct}}
-      <div on-click="selectColor(#gct)" on-mouseover="hoverColor(#gct)" class="gct" style="background-color:rgb({{#gct[0]}}, {{#gct[1]}}, {{#gct[2]}})"></div>
+    {{each sorted as #gct}}
+      <div on-click="select(#gct)" on-mouseover="hover(#gct)" class="gct" style="background-color:rgb({{#gct[0]}}, {{#gct[1]}}, {{#gct[2]}})"></div>
     {{/each}}
   </div>
 </script>
@@ -65,7 +83,6 @@
 </script>
 
     <script src="lib/derby-standalone.min.js"></script>
-    <!--<script src="lib/derby-standalone.js"></script>-->
     <script>
       if(navigator.appName.indexOf("Internet Explorer")!=-1){
         // warn the user
@@ -74,19 +91,18 @@
       ////////////////////// <BOILER PLATE> ///////////////////////////////
       // setup standalone derby
       var app = derby.createApp();
-      app.registerViews();
       // setup our templates
-      /*
       var templates = document.querySelectorAll('script[type="text/template"]');
       for (var i = 0; i < templates.length; i++) {
         var template = templates[i];
         app.views.register(template.id, template.innerHTML, template.dataset);
         template.parentNode.removeChild(template);
       }
-      */
       ////////////////////// </BOILER PLATE> ///////////////////////////////
       // setup our histogram component (defined in histogram.js)
       app.component("frame", Frame);
+      app.component("palette", Palette);
+      app.component("histosquares", HistoSquares);
       //app.component("definition", Definition);
       // create the page and expose the model for use in the console
       var page = app.createPage();
@@ -131,7 +147,6 @@
           var header;
           var transparency;
 
-          var frame = canvas.getContext('2d');
           //an async interface, we pass in several callbacks which get called as the images get parsed out of the gif
           var handler = {
             hdr: function(hdr) { 
@@ -149,9 +164,6 @@
             img: function(img) { 
               //console.log("img", img)
               model.push("_page.images", img)
-              canvas.width = img.width;
-              canvas.height = img.height;
-              draw(img, frame, header.gct, {transparency: transparency });
             },
             eof: function (block) {
               console.log("end of file")
